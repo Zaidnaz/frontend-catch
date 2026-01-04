@@ -12,17 +12,52 @@ export default function CreateBounty() {
   const wallet = useWallet();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     description: "",
     reward: "",
     verifier: "",
   });
 
+  const validateForm = (): string => {
+    if (!formData.description.trim()) {
+      return "Please enter a mission directive";
+    }
+    if (formData.description.trim().length < 10) {
+      return "Description must be at least 10 characters";
+    }
+    if (!formData.reward) {
+      return "Please enter a bounty reward";
+    }
+    const rewardAmount = parseFloat(formData.reward);
+    if (isNaN(rewardAmount) || rewardAmount <= 0) {
+      return "Reward must be a positive number";
+    }
+    if (rewardAmount > 100) {
+      return "Reward cannot exceed 100 SOL";
+    }
+    if (!formData.verifier.trim()) {
+      return "Please enter a verifier address";
+    }
+    // Basic validation for Solana address (44 chars, base58)
+    if (formData.verifier.trim().length !== 44) {
+      return "Invalid verifier address (must be 44 characters)";
+    }
+    return "";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     
     if (!wallet.connected) {
-      alert("Please connect your wallet first!");
+      setError("Please connect your wallet first!");
+      return;
+    }
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -40,12 +75,15 @@ export default function CreateBounty() {
 
       console.log("Bounty Created:", result);
       
+      // Show success message
+      alert(`✅ Bounty created successfully!\n\nTransaction: ${result.signature}\n\nBounty ID: ${result.publicKey}`);
+      
       // Redirect back to dashboard on success
       router.push("/dashboard");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Creation failed:", error);
-      alert("Failed to create bounty. Check console for details.");
+      setError(error.message || "Failed to create bounty. Check console for details.");
     } finally {
       setIsLoading(false);
     }
@@ -69,6 +107,13 @@ export default function CreateBounty() {
           <h1 className="text-3xl font-bold text-white">Broadcast New Signal</h1>
           <p className="text-secondary mt-2">Request data collection from the hunter network.</p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-500 rounded-xl">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">

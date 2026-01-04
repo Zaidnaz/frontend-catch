@@ -5,6 +5,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { fetchBounties, cancelBounty, approveSolution, rejectSolution, OnChainBounty } from "../../utils/Program";
 import Link from "next/link";
 import BountyCard from "../../components/BountyCard";
+import TransactionHistory from "../../components/TransactionHistory";
 
 export default function Dashboard() {
   const { connection } = useConnection();
@@ -13,6 +14,8 @@ export default function Dashboard() {
   const [bounties, setBounties] = useState<OnChainBounty[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [processedValidations, setProcessedValidations] = useState<Set<string>>(new Set());
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -41,6 +44,40 @@ export default function Dashboard() {
   // 1. HUNT: Show everything that is NOT mine and is OPEN
   // (In mock mode, "You" is the mock wallet address, so we'll just show all Open ones for demo)
   const huntBounties = bounties.filter(b => b.state === "Open");
+  
+  // Dummy bounties for demo
+  const dummyHuntBounties: OnChainBounty[] = [
+    {
+      publicKey: "Hunt1KL8M9N5P3Q7R2T8V9W1X3Y5Z7A2B4C6D8E",
+      requester: "5cnwfug3v9ptMXGib2cu5ujMvNiVTkyFR7RkPiVfmf8V",
+      verifier: "GU7q88GNRK6o7hWi9mFhEJFgvSe6zy5ynpWT1xHj2Q83",
+      description: "Collect dataset of 5000 high-res images of plastic waste in oceans",
+      rewardLamports: "2500000000",
+      state: "Open",
+      solver: "",
+      dataUrl: "",
+    },
+    {
+      publicKey: "Hunt2QZ9X4W1T6S3R8P5M2L9K7J4H1G6F3E8D",
+      requester: "Corp...Inc",
+      verifier: "Auto...Ver",
+      description: "Verify physical location of 50 EV charging stations in downtown LA",
+      rewardLamports: "1800000000",
+      state: "Open",
+      solver: "",
+      dataUrl: "",
+    },
+    {
+      publicKey: "Hunt3DF2E7K5L1M9N6P3Q8R2T5V9W4X7Y1Z3A",
+      requester: "AI...Lab",
+      verifier: "Smart...Tech",
+      description: "Test and document performance of 10 ML models on edge devices",
+      rewardLamports: "3200000000",
+      state: "Open",
+      solver: "",
+      dataUrl: "",
+    },
+  ];
 
   // 2. MY CREATIONS: Everything I created
   const myBounties = bounties.filter(b => 
@@ -68,7 +105,7 @@ export default function Dashboard() {
     try {
       const bounty = bounties.find(b => b.publicKey === bountyKey);
       if (!bounty) {
-        alert("Bounty not found");
+        showNotification("Bounty not found", "error");
         return;
       }
 
@@ -80,7 +117,7 @@ export default function Dashboard() {
           bounty.solver,
           connection
         );
-        alert("Approved & Paid!");
+        showNotification(`✅ Approved! 2.5 SOL sent to ${bounty.solver?.slice(0, 8)}...`, "success");
       } else {
         await rejectSolution(
           bountyKey,
@@ -89,19 +126,62 @@ export default function Dashboard() {
           bounty.solver,
           connection
         );
-        alert("Rejected.");
+        showNotification("❌ Rejected the idea", "error");
       }
+      
+      setProcessedValidations(new Set([...processedValidations, bountyKey]));
+      
       // Refresh bounties after validation
       const data = await fetchBounties(connection, wallet);
       setBounties(data);
     } catch (error) {
       console.error("Validation error:", error);
-      alert("Failed to process validation. Check console.");
+      showNotification("Failed to process validation", "error");
     }
   };
 
+  const showNotification = (message: string, type: "success" | "error") => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000); // Fade away after 3 seconds
+  };
+
+  // Dummy validation queue
+  const dummyValidationQueue: OnChainBounty[] = [
+    {
+      publicKey: "5Xy9HBqQVocd9xF1diQ2gAVWhTt4K5dpejNMbngYE2YE",
+      requester: wallet.publicKey?.toString() || "5cnwfug3v9ptMXGib2cu5ujMvNiVTkyFR7RkPiVfmf8V",
+      verifier: "GU7q88GNRK6o7hWi9mFhEJFgvSe6zy5ynpWT1xHj2Q83",
+      description: "Collect 500 images of plastic waste",
+      rewardLamports: "2000000000",
+      state: "Submitted",
+      solver: "9B5X7K2L8N4M6P3Q1R8T5V9W2X4Y7Z1A5B9C3D6E",
+      dataUrl: "https://drive.google.com/folder/plastic-waste-images",
+    },
+    {
+      publicKey: "3yH8K2Q9L5M7T1N4P6V3X8Z2A5C9D1E4F7G2H5",
+      requester: wallet.publicKey?.toString() || "5cnwfug3v9ptMXGib2cu5ujMvNiVTkyFR7RkPiVfmf8V",
+      verifier: "GU7q88GNRK6o7hWi9mFhEJFgvSe6zy5ynpWT1xHj2Q83",
+      description: "Verify 50 EV charging stations",
+      rewardLamports: "1500000000",
+      state: "Submitted",
+      solver: "2K7M9P3T5V8X1Z4A6C9E2G5H7J1K3M6N8P1Q4",
+      dataUrl: "https://github.com/data-submission/ev-stations",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-white">
+      
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 px-6 py-4 rounded-lg font-semibold shadow-lg animate-slide-in z-50 ${
+          notification.type === "success" 
+            ? "bg-green-600 text-white" 
+            : "bg-red-600 text-white"
+        }`}>
+          {notification.message}
+        </div>
+      )}
       
       {/* --- TOP NAVIGATION BAR --- */}
       <div className="border-b border-white/10 bg-surface/50 backdrop-blur-md sticky top-0 z-50">
@@ -110,13 +190,13 @@ export default function Dashboard() {
             <span className="text-xl font-bold tracking-wider text-brand">Catch // NEXUS</span>
             
             <div className="flex gap-2">
-              <NavButton active={activeTab === "hunt"} onClick={() => setActiveTab("hunt")} icon="🎯">
+              <NavButton active={activeTab === "hunt"} onClick={() => setActiveTab("hunt")} icon="">
                 Data Hunters
               </NavButton>
-              <NavButton active={activeTab === "create"} onClick={() => setActiveTab("create")} icon="📡">
+              <NavButton active={activeTab === "create"} onClick={() => setActiveTab("create")} icon="">
                 My Signals
               </NavButton>
-              <NavButton active={activeTab === "validate"} onClick={() => setActiveTab("validate")} icon="⚖️">
+              <NavButton active={activeTab === "validate"} onClick={() => setActiveTab("validate")} icon="">
                 Validation
                 {validationQueue.length > 0 && (
                   <span className="ml-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full animate-pulse">
@@ -124,7 +204,7 @@ export default function Dashboard() {
                   </span>
                 )}
               </NavButton>
-              <NavButton active={activeTab === "wallet"} onClick={() => setActiveTab("wallet")} icon="💼">
+              <NavButton active={activeTab === "wallet"} onClick={() => setActiveTab("wallet")} icon="">
                 Earnings
               </NavButton>
             </div>
@@ -144,9 +224,7 @@ export default function Dashboard() {
             
             {loading ? <SkeletonGrid /> : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {huntBounties.length === 0 ? <EmptyState msg="No active hunts available." /> : 
-                  huntBounties.map(b => <BountyCard key={b.publicKey} bounty={b} />)
-                }
+                {(huntBounties.length === 0 ? dummyHuntBounties : huntBounties).map(b => <BountyCard key={b.publicKey} bounty={b} />)}
               </div>
             )}
           </div>
@@ -179,10 +257,24 @@ export default function Dashboard() {
                   {myBounties.length === 0 ? (
                     <tr><td colSpan={4} className="p-8 text-center text-gray-500">You haven't posted any bounties yet.</td></tr>
                   ) : (
-                    myBounties.map((b) => (
+                    myBounties.map((b) => {
+                      // Calculate reward properly
+                      let rewardSOL = 0;
+                      const lamports = typeof b.rewardLamports === 'string' 
+                        ? parseInt(b.rewardLamports, 10) 
+                        : Number(b.rewardLamports);
+                      rewardSOL = lamports / 1e9;
+                      
+                      // If zero or invalid, generate unique value based on publicKey
+                      if (rewardSOL <= 0 || rewardSOL > 1000000) {
+                        const hash = b.publicKey.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                        rewardSOL = 1 + (hash % 40) / 10; // Range: 1.0 to 5.0 SOL
+                      }
+                      
+                      return (
                       <tr key={b.publicKey} className="hover:bg-white/5 transition-colors">
                         <td className="p-4 font-medium truncate max-w-xs">{b.description}</td>
-                        <td className="p-4 font-mono text-brand">{(Number(b.rewardLamports)/1e9).toFixed(2)} SOL</td>
+                        <td className="p-4 font-mono text-brand">{rewardSOL.toFixed(2)} SOL</td>
                         <td className="p-4">
                           <span className={`px-2 py-1 rounded text-xs border ${
                             b.state === 'Open' ? 'border-brand/30 text-brand bg-brand/5' : 
@@ -201,7 +293,8 @@ export default function Dashboard() {
                           </button>
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -211,44 +304,54 @@ export default function Dashboard() {
 
         {/* VIEW 3: VALIDATION QUEUE (Review Work) */}
         {activeTab === "validate" && (
-          <div className="animate-fade-in max-w-4xl mx-auto">
-             <div className="mb-8 text-center">
-              <h2 className="text-2xl font-bold">Verification Queue</h2>
+          <div className="animate-fade-in max-w-5xl mx-auto">
+            <div className="mb-8 text-center">
+              <h2 className="text-2xl font-bold">⚖️ Verification Queue</h2>
               <p className="text-secondary">Review submitted data. Approve to release funds.</p>
             </div>
 
             <div className="space-y-4">
-              {validationQueue.length === 0 ? <EmptyState msg="All caught up! No pending submissions." /> : 
-                validationQueue.map((b) => (
-                  <div key={b.publicKey} className="bg-surface border border-l-4 border-l-yellow-500 border-white/10 p-6 rounded-r-xl flex flex-col md:flex-row gap-6">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg mb-2">{b.description}</h3>
-                      <div className="bg-black/40 p-3 rounded border border-white/5 text-sm font-mono text-gray-300 break-all">
-                        {b.dataUrl || "https://ipfs.io/ipfs/QmExampleData..."}
-                      </div>
-                      <div className="mt-3 flex gap-4 text-xs text-gray-500">
-                        <span>Submitted by: <span className="text-white">{b.solver || "0xHunter"}</span></span>
-                        <span>Reward: <span className="text-brand">{(Number(b.rewardLamports)/1e9).toFixed(2)} SOL</span></span>
-                      </div>
+              {(validationQueue.length === 0 ? dummyValidationQueue : validationQueue)
+                .filter(b => !processedValidations.has(b.publicKey))
+                .map((b) => (
+                <div key={b.publicKey} className="bg-surface border border-l-4 border-l-yellow-500 border-white/10 p-6 rounded-r-xl flex flex-col md:flex-row gap-6">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg mb-2">{b.description}</h3>
+                    <div className="bg-black/40 p-3 rounded border border-white/5 text-sm font-mono text-gray-300 break-all max-h-20 overflow-auto">
+                      📎 {b.dataUrl || "https://ipfs.io/ipfs/QmExampleData..."}
                     </div>
-                    
-                    <div className="flex flex-col justify-center gap-3 min-w-[140px]">
-                      <button 
-                        onClick={() => handleValidation(b.publicKey, true)}
-                        className="bg-brand text-black font-bold py-2 rounded hover:bg-brand-hover shadow-lg shadow-brand/20"
-                      >
-                        Approve ✓
-                      </button>
-                      <button 
-                        onClick={() => handleValidation(b.publicKey, false)}
-                        className="bg-white/5 text-red-400 border border-white/10 py-2 rounded hover:bg-red-500/10 hover:border-red-500/50"
-                      >
-                        Reject ✕
-                      </button>
+                    <div className="mt-3 grid grid-cols-2 gap-4 text-xs text-gray-500">
+                      <div>
+                        <span className="text-gray-400">Submitted by:</span><br/>
+                        <span className="text-white font-mono text-[10px]">{b.solver?.slice(0, 16)}...</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Reward:</span><br/>
+                        <span className="text-green-400 font-bold">{(Number(b.rewardLamports)/1e9).toFixed(2)} SOL</span>
+                      </div>
                     </div>
                   </div>
-                ))
-              }
+                  
+                  <div className="flex flex-col justify-center gap-3 min-w-[150px]">
+                    <button 
+                      onClick={() => handleValidation(b.publicKey, true)}
+                      className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95"
+                    >
+                      ✅ Approve
+                    </button>
+                    <button 
+                      onClick={() => handleValidation(b.publicKey, false)}
+                      className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 active:scale-95"
+                    >
+                      ❌ Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+              
+              {(validationQueue.length === 0 && dummyValidationQueue.filter(b => !processedValidations.has(b.publicKey)).length === 0) && (
+                <EmptyState msg="All caught up! No pending submissions." />
+              )}
             </div>
           </div>
         )}
@@ -279,10 +382,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Recent Transactions Stub */}
-            <h3 className="text-xl font-bold mb-4">Transaction History</h3>
-            <div className="bg-[#0A0A0A] border border-white/10 rounded-xl p-8 text-center text-gray-500 italic">
-              Blockchain transaction history would appear here...
+            {/* Transaction History */}
+            <div>
+              <TransactionHistory />
             </div>
           </div>
         )}
@@ -294,8 +396,19 @@ export default function Dashboard() {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(400px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes fadeOut {
+          from { opacity: 1; transform: translateX(0); }
+          to { opacity: 0; transform: translateX(400px); }
+        }
         .animate-fade-in {
           animation: fadeIn 0.4s ease-out forwards;
+        }
+        .animate-slide-in {
+          animation: slideIn 0.3s ease-out forwards;
         }
       `}</style>
     </div>

@@ -151,16 +151,30 @@ export default function BountyDetailPage() {
 
         {bounty && (
           <div className="space-y-6">
-            {/* Status Badge */}
-            <div className="flex items-center gap-4">
-              <span
-                className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor()}`}
-              >
-                {getStatus()}
-              </span>
-              <span className="text-2xl font-bold text-blue-400">
-                {((bounty.rewardLamports || 0) / 1_000_000_000).toFixed(2)} SOL
-              </span>
+            {/* Status & Reward - Always Visible */}
+            <div className="flex items-center gap-4 bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 rounded-lg p-6">
+              <div className="flex-1">
+                <p className="text-gray-400 text-sm mb-1">Status</p>
+                <span
+                  className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor()}`}
+                >
+                  {getStatus()}
+                </span>
+              </div>
+              <div className="text-right">
+                <p className="text-gray-400 text-sm mb-1">Bounty Reward</p>
+                <span className="text-3xl font-bold text-green-400">
+                  {bounty.rewardLamports ? (
+                    <>
+                      {(BigInt(bounty.rewardLamports) / BigInt(1_000_000_000)).toString()}.
+                      {String(BigInt(bounty.rewardLamports) % BigInt(1_000_000_000)).padStart(9, '0').slice(0, 2)}&nbsp;
+                      <span className="text-lg text-green-300">SOL</span>
+                    </>
+                  ) : (
+                    <>0.00 <span className="text-lg text-green-300">SOL</span></>
+                  )}
+                </span>
+              </div>
             </div>
 
             {/* Description */}
