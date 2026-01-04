@@ -107,7 +107,7 @@ export default function Dashboard() {
       <div className="border-b border-white/10 bg-surface/50 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <span className="text-xl font-bold tracking-wider text-brand">DeNova // NEXUS</span>
+            <span className="text-xl font-bold tracking-wider text-brand">Catch // NEXUS</span>
             
             <div className="flex gap-2">
               <NavButton active={activeTab === "hunt"} onClick={() => setActiveTab("hunt")} icon="🎯">

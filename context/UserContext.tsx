@@ -17,7 +17,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   // Check LocalStorage on load
   useEffect(() => {
-    const storedName = localStorage.getItem("denova_username");
+    const storedName = localStorage.getItem("catch_username");
     if (storedName) setUsername(storedName);
   }, []);
 
@@ -25,18 +25,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!connected) {
       setUsername(null);
-      localStorage.removeItem("denova_username");
+      localStorage.removeItem("catch_username");
     }
   }, [connected]);
 
   const login = (name: string) => {
     setUsername(name);
-    localStorage.setItem("denova_username", name);
+    localStorage.setItem("catch_username", name);
   };
 
   const logout = () => {
     setUsername(null);
-    localStorage.removeItem("denova_username");
+    localStorage.removeItem("catch_username");
   };
 
   return (

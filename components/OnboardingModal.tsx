@@ -43,7 +43,7 @@ export default function OnboardingModal({ isOpen, onClose, targetRoute }: Onboar
         {/* Glow Effect */}
         <div className="absolute top-0 left-0 w-full h-1 bg-brand" />
 
-        <h2 className="text-2xl font-bold text-white mb-2">Welcome to DeNova</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">Welcome to Catch</h2>
         <p className="text-secondary mb-8">Connect your identity to start earning.</p>
 
         <div className="space-y-6">

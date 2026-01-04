@@ -10,7 +10,7 @@ import { UserProvider } from "../context/UserContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DeNova | Decentralized Bounties",
+  title: "Catch | Decentralized Bounties",
   description: "The trustless marketplace for work on Solana.",
 };
 
