@@ -43,7 +43,7 @@ export default function TransactionHistory() {
 
         return {
           signature: sig.signature,
-          timestamp: sig.blockTime,
+          timestamp: sig.blockTime ?? undefined,
           type,
           status: sig.err ? "failed" : "success",
         };
