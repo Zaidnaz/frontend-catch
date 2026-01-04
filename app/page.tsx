@@ -112,28 +112,6 @@ export default function Home() {
 
       <LiveTicker />
 
-      {/* --- STATS BAR --- */}
-      <div className="border-y border-white/5 bg-white/5 backdrop-blur-sm">
-         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 text-center lg:grid-cols-3">
-            <div className="mx-auto flex max-w-xs flex-col gap-y-2">
-              <dt className="text-base leading-7 text-secondary">Data Volume Traded</dt>
-              <dd className="order-first text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                4.2 TB <span className="text-sm text-brand font-medium align-top">DEVNET</span>
-              </dd>
-            </div>
-            <div className="mx-auto flex max-w-xs flex-col gap-y-2">
-              <dt className="text-base leading-7 text-secondary">Active Hunters</dt>
-              <dd className="order-first text-3xl font-semibold tracking-tight text-white sm:text-5xl">240+</dd>
-            </div>
-            <div className="mx-auto flex max-w-xs flex-col gap-y-2">
-              <dt className="text-base leading-7 text-secondary">Avg. Validation Time</dt>
-              <dd className="order-first text-3xl font-semibold tracking-tight text-white sm:text-5xl">~400ms</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
-
       <InteractiveCubes />
 
       {/* --- FEATURES --- */}
